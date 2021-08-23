@@ -1,2 +1,2 @@
 # asc-android
-ASC Android SDK Repository
+以GitHub packages 形式组织的 ASC Android SDK Repository
