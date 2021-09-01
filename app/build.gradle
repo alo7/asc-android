@@ -1,0 +1,140 @@
+apply plugin: 'com.android.application'
+
+def versionMajor = 0
+def versionMinor = 3
+def versionPatch = 0
+
+android {
+    compileSdkVersion 29
+    buildToolsVersion "29.0.3"
+
+    defaultConfig {
+        applicationId "com.alo7.android.ascsample"
+        minSdkVersion 21
+        targetSdkVersion 29
+        versionCode versionMajor * 10000 + versionMinor * 100 + versionPatch
+        versionName "${versionMajor}.${versionMinor}.${versionPatch}"
+
+        ndk {
+            abiFilters "armeabi-v7a", "arm64-v8a"
+        }
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    //TODO 此处添加 sign configs
+//    signingConfigs {
+//        debug {
+//            storeFile file("xxxxxx")
+//            storePassword "xxxxxx"
+//            keyAlias "xxxxxx"
+//            keyPassword "xxxxxx"
+//        }
+//
+//        release {
+//            storeFile file("yyyyyy")
+//            storePassword "yyyyyy"
+//            keyAlias "yyyyyy"
+//            keyPassword "yyyyyy"
+//        }
+//    }
+
+    buildTypes {
+        debug {
+            minifyEnabled false
+            debuggable true
+            //signingConfig signingConfigs.debug
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        release {
+            minifyEnabled true
+            debuggable true
+            //signingConfig signingConfigs.release
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        staging {
+            //copy config from release
+            initWith release
+            // Specifies a sorted list of fallback build types that the
+            // plugin should try to use when a dependency does not include a
+            // "staging" build type
+        }
+    }
+
+    flavorDimensions "org"
+    productFlavors {
+        //不同的Flavor dependencies 依赖不同
+        noIflyEmbed {
+            dimension "org"
+            applicationIdSuffix ""
+            resValue "string", "app_name", "ASC-SDK Sample"
+        }
+        blh {
+            dimension "org"
+            applicationIdSuffix ".blh"
+            resValue "string", "app_name", "BLH ASC-SDK Sample"
+        }
+        hlb {
+            dimension "org"
+            applicationIdSuffix ".hlb"
+            resValue "string", "app_name", "HLB ASC-SDK Sample"
+        }
+    }
+
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    applicationVariants.all { variant ->
+        def name = variant.flavorName
+        variant.outputs.all { output ->
+            if (name == "noIflyEmbed") {
+                outputFileName = "ASCSDK_DEMO_v${variant.versionName}_${variant.buildType.name}.apk"
+            } else {
+                outputFileName = "ASCSDK_DEMO_v${variant.versionName}_${variant.buildType.name}_" + name + ".apk"
+            }
+
+        }
+    }
+}
+
+configurations.all {
+    //gradle will cache changing modules for 24 hours by default, make it 0 seconds
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+
+afterEvaluate {
+    dependencies {
+        //the original dependencies
+//    implementation fileTree(dir: "libs", include: ["*.jar"])
+        implementation 'androidx.appcompat:appcompat:1.0.2'
+        implementation 'com.singsound.library:evaluating:2.1.1'
+        testImplementation 'junit:junit:4.12'
+        implementation "com.google.android.material:material:1.0.0"
+
+        implementation 'com.google.code.gson:gson:2.8.6'
+        implementation 'com.squareup.retrofit2:converter-gson:2.5.0'
+        implementation 'com.squareup.retrofit2:retrofit:2.5.0'
+        implementation 'com.squareup.okhttp3:logging-interceptor:3.12.3'
+        implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
+        implementation 'io.reactivex.rxjava2:rxjava:2.2.12'
+        implementation 'com.squareup.retrofit2:adapter-rxjava2:2.5.0'
+
+        //ASC_ITG STEP, Add iflytek jar/so files; 必须. 否则闪退
+        noIflyEmbedImplementation files('libs/Msc_v1140.jar')
+
+        //ASC_ITG STEP, 如果集成了先声, 需要和我们版本号一致, 否则运行时闪退
+
+        //ASC_ITG STEP, add asc dependencies
+        //need to add the following dependencies
+        implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+        // blh sdk
+        blhImplementation "com.alo7.android:${rootProject.ascSdkName}-blh:${rootProject.ascSdkVersion}"
+        // no ifly embedded sdk
+        noIflyEmbedImplementation "com.alo7.android:${rootProject.ascSdkName}:${rootProject.ascSdkVersion}"
+        // embed ifly version sdk
+        hlbImplementation "com.alo7.android:${rootProject.ascSdkName}-hlb:${rootProject.ascSdkVersion}"
+    }
+}
