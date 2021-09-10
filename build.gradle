@@ -13,7 +13,7 @@ buildscript {
 
     ext {
         ascSdkName = "asc-ext"
-        ascSdkVersion = "0.3.0-SNAPSHOT"
+        ascSdkVersion = "0.3.1-SNAPSHOT"
     }
 }
 
